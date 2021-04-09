@@ -50,16 +50,22 @@ done
 
 # Pull any extra images from this list
 cat > additional-images.txt <<EOF
-quay.io/ansible/awx-operator:0.7.0
-postgres:12
-redis:6.2.1
-quay.io/ansible/awx:18.0.0
-quay.io/ansible/awx-ee
-quay.io/jetstack/cert-manager-cainjector:$CERT_MANAGER_VERSION
-quay.io/jetstack/cert-manager-controller:$CERT_MANAGER_VERSION
-quay.io/jetstack/cert-manager-webhook:$CERT_MANAGER_VERSION
+quay.io/ansible/awx-operator:0.8.0
+quay.io/ansible/awx-ee:0.1.1
+quay.io/argoproj/argocd:v2.0.0
+ghcr.io/dexidp/dex:v2.27.0
+busybox:1.32.1
+netboxcommunity/netbox:v2.10.4
+netboxcommunity/netbox:v2.10.4
 EOF
 download_images_from_list additional-images.txt
+
+#quay.io/jetstack/cert-manager-cainjector:$CERT_MANAGER_VERSION
+#quay.io/jetstack/cert-manager-controller:$CERT_MANAGER_VERSION
+#quay.io/jetstack/cert-manager-webhook:$CERT_MANAGER_VERSION
+#quay.io/ansible/awx:18.0.0
+#postgres:12
+#redis:6.2.1
 
 # Download Rancher images
 #curl -LO https://github.com/rancher/rancher/releases/download/$RANCHER_VERSION/rancher-images.txt
