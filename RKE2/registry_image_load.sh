@@ -50,7 +50,7 @@ done
 
 # Pull any extra images from this list
 cat > additional-images.txt <<EOF
-docker.io/bitnami/postgresql11.11.0-debian-10-r0
+docker.io/bitnami/postgresql:11.11.0-debian-10-r0
 docker.io/bitnami/redis:6.0.10-debian-10-r19
 EOF
 download_images_from_list additional-images.txt
