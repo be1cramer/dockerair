@@ -27,5 +27,5 @@ helm repo update
 #helm fetch rancher-latest/rancher --version=2.5.5
 #helm fetch jetstack/cert-manager --version v1.0.4
 helm fetch bootc/netbox --version=3.0.0
-helm fetch bitnami/postgres --version v10.3.17
-helm fetch bitnami/redis --version v13.0.1
+helm fetch bitnami/postgresql --version 10.3.17
+helm fetch bitnami/redis --version 13.0.1
