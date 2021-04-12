@@ -6,7 +6,7 @@ yum install -y openssl yum-utils
 
 yumdownloader --downloaddir $(pwd) tar
 
-#curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 
 
 #curl -LO https://github.com/derailed/k9s/releases/download/v0.24.2/k9s_Linux_x86_64.tar.gz
