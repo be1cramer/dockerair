@@ -50,7 +50,17 @@ done
 
 # Pull any extra images from this list
 cat > additional-images.txt <<EOF
-us.gcr.io/k8s-artifacts-prod/ingress-nginx/controller:v0.34.1
+goharbor/chartmuseum-photon:v2.2.1
+goharbor/harbor-core:v2.2.1
+goharbor/harbor-db:v2.2.1
+goharbor/harbor-jobservice:v2.2.1
+goharbor/notary-server-photon:v2.2.1
+goharbor/notary-signer-photon:v2.2.1
+goharbor/harbor-portal:v2.2.1
+goharbor/redis-photon:v2.2.1
+goharbor/registry-photon:v2.2.1
+goharbor/harbor-registryctl:v2.2.1
+goharbor/trivy-adapter-photon:v2.2.1
 EOF
 download_images_from_list additional-images.txt
 
@@ -69,6 +79,8 @@ download_images_from_list additional-images.txt
 #netboxcommunity/netbox:v2.10.4
 #docker.io/bitnami/postgresql:11.11.0-debian-10-r0
 #docker.io/bitnami/redis:6.0.10-debian-10-r19
+#us.gcr.io/k8s-artifacts-prod/ingress-nginx/controller:v0.34.1
+
 
 # Download Rancher images
 #curl -LO https://github.com/rancher/rancher/releases/download/$RANCHER_VERSION/rancher-images.txt
