@@ -50,7 +50,7 @@ done
 
 # Pull any extra images from this list
 cat > additional-images.txt <<EOF
-us.gcr.io/k8s-artifacts-prod/ingress-nginx/controller
+us.gcr.io/k8s-artifacts-prod/ingress-nginx/controller:v0.34.0
 EOF
 download_images_from_list additional-images.txt
 
