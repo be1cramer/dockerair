@@ -21,11 +21,14 @@ curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bas
 #helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
 #helm repo add jetstack https://charts.jetstack.io
 helm repo add bitnami https://charts.bitnami.com/bitnami
-helm repo add bootc https://charts.boo.tc
+#helm repo add bootc https://charts.boo.tc
+helm repo add harbor https://helm.goharbor.io
 helm repo update
 
 #helm fetch rancher-latest/rancher --version=2.5.5
 #helm fetch jetstack/cert-manager --version v1.0.4
-helm fetch bootc/netbox --version=3.0.0
-helm fetch bitnami/postgresql --version 10.3.17
-helm fetch bitnami/redis --version 13.0.1
+#helm fetch bootc/netbox --version=3.0.0
+helm fetch bitnami/postgresql-ha --version 6.9.0
+helm fetch bitnami/redis-cluster --version 5.0.0
+helm fetch harbor/harbor --version 1.6.1
+helm fetch bitnami/harbor --version 9.8.3
