@@ -50,8 +50,7 @@ done
 
 # Pull any extra images from this list
 cat > additional-images.txt <<EOF
-docker.io/bitnami/postgresql:11.11.0-debian-10-r0
-docker.io/bitnami/redis:6.0.10-debian-10-r19
+us.gcr.io/k8s-artifacts-prod/ingress-nginx/controller
 EOF
 download_images_from_list additional-images.txt
 
@@ -68,6 +67,8 @@ download_images_from_list additional-images.txt
 #busybox:1.32.1
 #netboxcommunity/netbox:v2.10.4
 #netboxcommunity/netbox:v2.10.4
+#docker.io/bitnami/postgresql:11.11.0-debian-10-r0
+#docker.io/bitnami/redis:6.0.10-debian-10-r19
 
 # Download Rancher images
 #curl -LO https://github.com/rancher/rancher/releases/download/$RANCHER_VERSION/rancher-images.txt
