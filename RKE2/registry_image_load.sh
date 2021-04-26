@@ -50,29 +50,9 @@ done
 
 # Pull any extra images from this list
 cat > additional-images.txt <<EOF
-goharbor/chartmuseum-photon:v2.2.1
-goharbor/harbor-core:v2.2.1
-goharbor/harbor-db:v2.2.1
-goharbor/harbor-jobservice:v2.2.1
-goharbor/notary-server-photon:v2.2.1
-goharbor/notary-signer-photon:v2.2.1
-goharbor/harbor-portal:v2.2.1
-goharbor/redis-photon:v2.2.1
-goharbor/registry-photon:v2.2.1
-goharbor/harbor-registryctl:v2.2.1
-goharbor/trivy-adapter-photon:v2.2.1
-docker.io/bitnami/chartmuseum:0.13.1-debian-10-r16
-docker.io/bitnami/harbor-core:2.2.0-debian-10-r29
-docker.io/bitnami/harbor-jobservice:2.2.0-debian-10-r32
-docker.io/bitnami/nginx:1.19.8-debian-10-r19
-docker.io/bitnami/harbor-notary-server:2.2.0-debian-10-r28
-docker.io/bitnami/harbor-notary-signer:2.2.0-debian-10-r28
-docker.io/bitnami/harbor-portal:2.2.1-debian-10-r0
-docker.io/bitnami/postgresql:11.11.0-debian-10-r50
-docker.io/bitnami/redis:6.0.12-debian-10-r3
-docker.io/bitnami/harbor-registry:2.2.1-debian-10-r0
-docker.io/bitnami/harbor-registryctl:2.2.0-debian-10-r31
-docker.io/bitnami/harbor-adapter-trivy:2.2.0-debian-10-r30
+harbor.jcudev.corp/license-dashboard/api:0.0.1
+harbor.jcudev.corp/license-dashboard/dash:0.0.1
+docker.elastic.co/elasticsearch/elasticsearch:7.8.1
 EOF
 download_images_from_list additional-images.txt
 
