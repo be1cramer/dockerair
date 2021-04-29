@@ -7,7 +7,7 @@ cd temp_dir
 
 REGISTRY_HOSTNAME=${1:-"127.0.0.1:5443"}
 CERT_MANAGER_VERSION="v1.0.4"
-RKE2_VERSION=${2:-"v1.19.7+rke2r1"}
+RKE2_VERSION=${2:-"v1.20.6+rke2r1"}
 RANCHER_VERSION="v2.5.5"
 
 yum update -y
@@ -50,9 +50,6 @@ done
 
 # Pull any extra images from this list
 cat > additional-images.txt <<EOF
-harbor.jcudev.corp/license-dashboard/api:0.0.1
-harbor.jcudev.corp/license-dashboard/dash:0.0.1
-docker.elastic.co/elasticsearch/elasticsearch:7.8.1
 EOF
 download_images_from_list additional-images.txt
 
@@ -72,6 +69,9 @@ download_images_from_list additional-images.txt
 #docker.io/bitnami/postgresql:11.11.0-debian-10-r0
 #docker.io/bitnami/redis:6.0.10-debian-10-r19
 #us.gcr.io/k8s-artifacts-prod/ingress-nginx/controller:v0.34.1
+#harbor.jcudev.corp/license-dashboard/api:0.0.1
+#harbor.jcudev.corp/license-dashboard/dash:0.0.1
+#docker.elastic.co/elasticsearch/elasticsearch:7.8.1
 
 
 # Download Rancher images
@@ -79,8 +79,8 @@ download_images_from_list additional-images.txt
 #download_images_from_list rancher-images.txt
 
 # Download RKE Images
-#curl -LO https://github.com/rancher/rke2/releases/download/$RKE2_VERSION/rke2-images.linux-amd64.txt
-#download_images_from_list rke2-images.linux-amd64.txt
+curl -LO https://github.com/rancher/rke2/releases/download/$RKE2_VERSION/rke2-images.linux-amd64.txt
+download_images_from_list rke2-images.linux-amd64.txt
 
 cd ../
 rm -rf temp_dir
