@@ -50,6 +50,7 @@ done
 
 # Pull any extra images from this list
 cat > additional-images.txt <<EOF
+harbor.jcudev.corp/license-dashboard/api:0.0.2
 EOF
 download_images_from_list additional-images.txt
 
@@ -79,8 +80,8 @@ download_images_from_list additional-images.txt
 #download_images_from_list rancher-images.txt
 
 # Download RKE Images
-curl -LO https://github.com/rancher/rke2/releases/download/$RKE2_VERSION/rke2-images.linux-amd64.txt
-download_images_from_list rke2-images.linux-amd64.txt
+#curl -LO https://github.com/rancher/rke2/releases/download/$RKE2_VERSION/rke2-images.linux-amd64.txt
+#download_images_from_list rke2-images.linux-amd64.txt
 
 cd ../
 rm -rf temp_dir
