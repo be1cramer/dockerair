@@ -50,7 +50,7 @@ done
 
 # Pull any extra images from this list
 cat > additional-images.txt <<EOF
-harbor.jcudev.corp/license-dashboard/api:0.0.3
+harbor.jcudev.corp/license-dashboard/api:0.0.4
 EOF
 download_images_from_list additional-images.txt
 
