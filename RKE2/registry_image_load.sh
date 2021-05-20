@@ -8,7 +8,7 @@ cd temp_dir
 REGISTRY_HOSTNAME=${1:-"127.0.0.1:5443"}
 CERT_MANAGER_VERSION="v1.0.4"
 RKE2_VERSION=${2:-"v1.20.6+rke2r1"}
-RANCHER_VERSION="v2.5.5"
+RANCHER_VERSION="v2.5.8"
 
 yum update -y
 yum install -y yum-utils
@@ -77,8 +77,8 @@ download_images_from_list additional-images.txt
 
 
 # Download Rancher images
-#curl -LO https://github.com/rancher/rancher/releases/download/$RANCHER_VERSION/rancher-images.txt
-#download_images_from_list rancher-images.txt
+curl -LO https://github.com/rancher/rancher/releases/download/$RANCHER_VERSION/rancher-images.txt
+download_images_from_list rancher-images.txt
 
 # Download RKE Images
 #curl -LO https://github.com/rancher/rke2/releases/download/$RKE2_VERSION/rke2-images.linux-amd64.txt
