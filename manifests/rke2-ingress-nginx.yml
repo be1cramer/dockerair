@@ -6,12 +6,12 @@ metadata:
 spec:
   valuesContent: |-
     controller:
-      #containerPort:
-      #  http: 8080
-      #  https: 8443
+      containerPort:
+       http: 8080
+       https: 8443
       extraArgs:
         http-port: "8080"
         https-port: "8443"
-      kind: DaemonSet
-      daemonset:
-        useHostPort: true
+      # kind: DaemonSet
+      # daemonset:
+      #   useHostPort: true
