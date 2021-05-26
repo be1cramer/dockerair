@@ -1,0 +1,17 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: rke2-ingress-nginx
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    controller:
+      containerPort:
+        http: 8080
+        https: 8443
+      extraArgs:
+        http-port: "8080"
+        https-port: "8443"
+      kind: DaemonSet
+      daemonset:
+        useHostPort: true
