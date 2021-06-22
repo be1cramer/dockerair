@@ -1,0 +1,61 @@
+mkdir -p /var/lib/rancher/rke2/coredns
+
+
+cat > /var/lib/rancher/rke2/coredns/asteroids.db <<EOF
+asteroids.corp.        IN  SOA bcec-app2-s001.asteroids.corp. be1cramer.asteroids.corp. 2020111820 7200 3600 1209600 3600
+bcec-app2-s001.asteroids.corp.  IN  A   192.168.133.28
+bcec-app2-w001.asteroids.corp.  IN  A   192.168.133.29
+bcec-app2-s002.asteroids.corp.  IN  A   192.168.133.31
+bcec-app2-s003.asteroids.corp.  IN  A   192.168.133.32
+kubeapi.asteroids.corp.  IN  A   192.168.133.30
+*.asteroids.corp.  IN  A   192.168.133.30
+EOF
+
+cat > /var/lib/rancher/rke2/coredns/Corefile <<EOF
+.:53 {
+    forward . 192.168.99.211:53 192.168.210.50:53
+    log
+    errors
+}
+
+asteroids.corp:53 {
+    file /etc/coredns/asteroids.db
+    log
+    errors
+}
+
+ntsdev.net {
+    forward . 192.168.210.50:53 192.168.128.51:53 192.168.128.52:53
+}
+EOF
+
+cat > /var/lib/rancher/rke2/agent/pod-manifests/coredns.yaml <<EOF
+apiVersion: v1
+kind: Pod
+metadata:
+  name: coredns-box
+  namespace: kube-system
+spec:
+  containers:
+  - image: coredns/coredns
+    command: 
+    - "/coredns"
+    - "-conf"
+    - "/etc/coredns/Corefile"
+    name: coredns-box
+    resources: {}
+    volumeMounts:
+    - mountPath: /etc/coredns/Corefile
+      name: corefile
+    - mountPath: /etc/coredns/asteroids.db
+      name: db
+  hostNetwork: true
+  volumes:
+  - hostPath:
+      path: /var/lib/rancher/rke2/coredns/Corefile
+    name: corefile
+  - hostPath:
+      path: /var/lib/rancher/rke2/coredns/asteroids.db
+    name: db
+status: {}
+EOF

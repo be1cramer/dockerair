@@ -1,0 +1,139 @@
+# Set up KeepAliveD notes (MDD)
+## KeepaliveD Set Vars
+Set vars
+```shell
+# network interface taking part in the negotiation of the virtual IP, e.g. eth0.
+export INTERFACE=ens192
+# should be the same for all keepalived cluster hosts while unique amongst all clusters in the same subnet. Many distros pre-configure its value to 51.
+export ROUTER_ID=51
+# should be higher on the master than on the backups. Hence 101 and 100 respectively will suffice.
+export MASTER_PRIORITY=101
+export BACKUP_PRIORITY=100
+# should be the same for all keepalived cluster hosts, e.g. 42
+export AUTH_PASS="authpass"
+# is the virtual IP address negotiated between the keepalived cluster hosts.
+export APISERVER_VIP="192.168.133.30"
+# haproxy listen ports
+export APISERVER_DEST_PORT=6443
+```
+### On the Master keepalived nodes
+Set up master configs using state=master for the first "master" agent
+```shell
+mkdir -p /var/lib/rancher/rke2/keepalived
+cat > /var/lib/rancher/rke2/keepalived/keepalived.conf <<EOF
+! /etc/keepalived/keepalived.conf
+! Configuration File for keepalived
+global_defs {
+    router_id LVS_DEVEL
+}
+vrrp_script check_apiserver {
+  script "/etc/keepalived/check_apiserver.sh"
+  interval 3
+  weight -2
+  fall 10
+  rise 2
+}
+vrrp_instance VI_1 {
+    state MASTER
+    interface ${INTERFACE}
+    virtual_router_id ${ROUTER_ID}
+    priority ${MASTER_PRIORITY}
+    authentication {
+        auth_type PASS
+        auth_pass ${AUTH_PASS}
+    }
+    virtual_ipaddress {
+        ${APISERVER_VIP}
+    }
+    track_script {
+        check_apiserver
+    }
+}
+EOF
+```
+### On the backup KeepaliveD nodes
+Set up backup configs using state=backup for the next X "backup" agents
+```shell
+mkdir -p /var/lib/rancher/rke2/keepalived
+cat > /var/lib/rancher/rke2/keepalived/keepalived.conf <<EOF
+! /etc/keepalived/keepalived.conf
+! Configuration File for keepalived
+global_defs {
+    router_id LVS_DEVEL
+}
+vrrp_script check_apiserver {
+  script "/etc/keepalived/check_apiserver.sh"
+  interval 3
+  weight -2
+  fall 10
+  rise 2
+}
+vrrp_instance VI_1 {
+    state BACKUP
+    interface ${INTERFACE}
+    virtual_router_id ${ROUTER_ID}
+    priority ${BACKUP_PRIORITY}
+    authentication {
+        auth_type PASS
+        auth_pass ${AUTH_PASS}
+    }
+    virtual_ipaddress {
+        ${APISERVER_VIP}
+    }
+    track_script {
+        check_apiserver
+    }
+}
+EOF
+```
+### on both masters and backups
+do this for all agents
+```shell
+cat > /var/lib/rancher/rke2/agent/pod-manifests/keepalived.yaml <<EOF
+apiVersion: v1
+kind: Pod
+metadata:
+  name: keepalived
+  namespace: kube-system
+spec:
+  containers:
+  - image: docker.io/mddamato/keepalived:latest
+    name: keepalived
+    resources: {}
+    securityContext:
+      capabilities:
+        add:
+        - NET_ADMIN
+        - NET_BROADCAST
+        - NET_RAW
+    volumeMounts:
+    - mountPath: /etc/keepalived/keepalived.conf
+      name: config
+    - mountPath: /etc/keepalived/check_apiserver.sh
+      name: check
+  hostNetwork: true
+  volumes:
+  - hostPath:
+      path: /var/lib/rancher/rke2/keepalived/keepalived.conf
+    name: config
+  - hostPath:
+      path: /var/lib/rancher/rke2/keepalived/check_apiserver.sh
+    name: check
+status: {}
+EOF
+cat > /var/lib/rancher/rke2/keepalived/check_apiserver.sh <<EOF
+#!/bin/sh
+errorExit() {
+    echo "*** \$1" 1>&2
+    exit 1
+}
+curl --silent --max-time 2 --insecure https://localhost:${APISERVER_DEST_PORT}/ -o /dev/null || errorExit "Error GET https://localhost:${APISERVER_DEST_PORT}/"
+if ip addr | grep -q ${APISERVER_VIP}; then
+    curl --silent --max-time 2 --insecure https://${APISERVER_VIP}:${APISERVER_DEST_PORT}/ -o /dev/null || errorExit "Error GET https://${APISERVER_VIP}:${APISERVER_DEST_PORT}/"
+fi
+curl --silent --max-time 2 --insecure https://localhost:443/ -o /dev/null || errorExit "Error GET https://localhost:443/"
+if ip addr | grep -q ${APISERVER_VIP}; then
+    curl --silent --max-time 2 --insecure https://${APISERVER_VIP}:443/ -o /dev/null || errorExit "Error GET https://${APISERVER_VIP}:443/"
+fi
+EOF
+```

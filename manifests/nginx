@@ -1,0 +1,70 @@
+mkdir -p /var/lib/rancher/rke2/nginx
+
+cat > /var/lib/rancher/rke2/agent/pod-manifests/nginx-lb.yaml <<EOF
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-lb
+  namespace: kube-system
+spec:
+  containers:
+  - image: nginx:1.14
+    name: nginx-lb
+    resources: {}
+    volumeMounts:
+    - mountPath: /etc/nginx/nginx.conf
+      name: config
+  hostNetwork: true
+  volumes:
+  - hostPath:
+      path: /var/lib/rancher/rke2/nginx/nginx.conf
+    name: config
+status: {}
+EOF
+
+cat > /var/lib/rancher/rke2/nginx/nginx.conf <<EOF
+worker_processes 4;
+worker_rlimit_nofile 40000;
+
+events {
+    worker_connections 8192;
+}
+
+stream {
+    upstream rancher_servers_http {
+        least_conn;
+        server 192.168.133.28:8080 max_fails=3 fail_timeout=5s;
+        server 192.168.133.29:8080 max_fails=3 fail_timeout=5s;
+        server 192.168.133.31:8080 max_fails=3 fail_timeout=5s;
+        server 192.168.133.32:8080 max_fails=3 fail_timeout=5s;
+    }
+    server {
+        listen 80;
+        proxy_pass rancher_servers_http;
+    }
+
+    upstream rancher_servers_https {
+        least_conn;
+        server 192.168.133.28:8443 max_fails=3 fail_timeout=5s;
+        server 192.168.133.29:8443 max_fails=3 fail_timeout=5s;
+        server 192.168.133.31:8443 max_fails=3 fail_timeout=5s;
+        server 192.168.133.32:8443 max_fails=3 fail_timeout=5s;
+    }
+    server {
+        listen     443;
+        proxy_pass rancher_servers_https;
+    }
+
+    upstream rke2_kubeapi {
+        least_conn;
+        server 192.168.133.28:7443 max_fails=3 fail_timeout=5s;
+        server 192.168.133.31:7443 max_fails=3 fail_timeout=5s;
+        server 192.168.133.32:7443 max_fails=3 fail_timeout=5s;
+    }
+    server {
+        listen 6443;
+        proxy_pass rke2_kubeapi;
+    }
+
+}
+EOF
