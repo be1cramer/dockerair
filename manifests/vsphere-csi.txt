@@ -1,0 +1,199 @@
+cat > /etc/kubernetes/csi-vsphere.conf << EOF
+[Global]
+cluster-id = "8939c463854633d2"
+
+[VirtualCenter "192.168.210.55"]
+insecure-flag = "true"
+user = "jcuadmin@vsphere.local"
+password = "!QAZxsw2"
+port = "443"
+datacenters = "NTS AS LAB"
+targetvSANFileShareDatastoreURLs = "ds:///vmfs/volumes/vsan:5271432f68db84c8-9ee689b55577f57a/"
+
+EOF
+
+
+cat > /etc/kubernetes/vsphere.conf << EOF
+global:
+  port: 443
+  insecureFlag: true
+  user: 
+    - "jcuadmin@vsphere.local"
+  password: 
+    - "!QAZxsw2"
+
+vcenter:
+  as-vcsa-01:
+    server: 192.168.210.55
+    datacenters:
+      - "NTS AS LAB"
+    secretName: vsphere-cpi-creds
+    secretNamespace: kube-system
+
+EOF
+
+cat > /etc/kubernetes/vsphere.conf << EOF
+
+[Global]
+user = "jcuadmin@vsphere.local"
+password = "!QAZxsw2"
+port = "443"
+insecure-flag = "1"
+
+[VirtualCenter "192.168.210.55"]
+datacenters = "NTS AS LAB"
+
+[Workspace]
+server = "192.168.210.55"
+datacenter = "NTS AS LAB"
+default-datastore = "vsanDatastore"
+resourcepool-path = "vSan Cluster/JCU-DEV"
+folder = "JCU"
+
+[Disk]
+scsicontrollertype = pvscsi
+
+EOF
+
+cat > /etc/kubernetes/vsphere-cpi-creds.yaml << EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: vsphere-cpi-creds
+  namespace: kube-system
+stringData:
+  192.168.210.55.username: "jcuadmin@vsphere.local"
+  192.168.210.55.password: "!QAZxsw2"
+
+EOF
+
+cat > /etc/kubernetes/cpi-global-secret.yaml << EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cpi-global-secret
+  namespace: kube-system
+stringData:
+  192.168.210.55.username: "jcuadmin@vsphere.local"
+  192.168.210.55.password: "!QAZxsw2"
+
+EOF
+
+
+cat > /etc/rancher/rke2/config.yaml << EOF
+
+selinux: true
+tls-san:
+- 192.168.133.35
+kubelet-arg:
+- cloud-provider=vsphere
+disable-cloud-controller: true
+cloud-provider-name: vsphere
+cloud-provider-config:
+- /etc/kubernetes/vsphere.conf
+
+EOF
+
+
+[Global]
+insecure-flag = "true"
+
+[VirtualCenter "IP or FQDN"]
+user = "username@vsphere.local"
+password = "password"
+port = "port"
+datacenters = "<datacenter1-path>, <datacenter2-path>, ..."
+
+EOF
+
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: rancher-vsphere-cpi
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    vCenter:
+      host: "192.168.210.55"
+      datacenters: "NTS AS LAB"
+      username: "jcuadmin@vsphere.local"
+      password: "!QAZxsw2"
+      credentialsSecret:
+        generate: true
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: rancher-vsphere-csi
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    vCenter:
+      host: "192.168.210.55"
+      datacenters: "NTS AS LAB"
+      username: "jcuadmin@vsphere.local"
+      password: "!QAZxsw2"
+      clusterId: "vcsi"
+      configSecret:
+        generate: true
+    storageClass:
+      datastoreURL: "ds:///vmfs/volumes/vsan:5271432f68db84c8-9ee689b55577f57a/"
+    csiMigration:
+      enabled: true
+
+
+sudo tee /etc/kubernetes/vsphere.conf >/dev/null <<EOF
+[Global]
+user = "jcuadmin@vsphere.local"
+password = "!QAZxsw2"
+port = "443"
+insecure-flag = "1"
+
+[VirtualCenter "192.168.210.55"]
+datacenters = "NTS AS LAB"
+
+[Workspace]
+server = "192.168.210.55"
+datacenter = "NTS AS LAB"
+default-datastore = "vsanDatastore"
+resourcepool-path = "vSan Cluster/JCU-DEV"
+folder = "JCU"
+
+[Disk]
+scsicontrollertype = pvscsi
+
+[Network]
+public-network = "VM Network"
+EOF
+
+cat > /etc/kubernetes/vsphere.conf << EOF
+
+global:
+  port: 443
+  # set insecureFlag to true if the vCenter uses a self-signed cert
+  insecureFlag: true
+  # settings for using k8s secret
+  secretName: cpi-global-secret
+  secretNamespace: kube-system
+
+# vcenter section
+vcenter:
+  tenant-finance:
+    server: as-vcsa-01.ntsdev.net
+    datacenters:
+      - "NTS AS LAB"
+
+EOF
+
+cat > /etc/kubernetes/cpi-global-secret.yaml << EOF
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cpi-global-secret
+  namespace: kube-system
+stringData:
+  as-vcsa-01.ntsdev.net.username: "jcuadmin@vsphere.local"
+  as-vcsa-01.ntsdev.net.password: "!QAZxsw2"
+
+EOF
