@@ -5,9 +5,10 @@ Pre-RKE2 Env
 4. install iptables-services
 5. add iptable rules for cross-node comms
 5. tarball rke2 (https://rfed-public.s3-us-gov-east-1.amazonaws.com/rke-government-deps-offline-bundle-el8.tar.gz)
+curl -LO https://rfed-public.s3-us-gov-east-1.amazonaws.com/rke-government-deps-offline-bundle-el8.tar.gz
 curl -LO https://rfed-public.s3-us-gov-east-1.amazonaws.com/rke-government-deps-offline-bundle-el7.tar.gz
 6. make install_server.sh executable, and execute
-7. server: should point to fqdn of loadbalancer ( ie. https://kube.jcudev.corp:94345 ) in /etc/rancher/rke2/config.yaml
+7. server: should point to fqdn of loadbalancer ( ie. https://kube.jcudev.corp:9345 ) in /etc/rancher/rke2/config.yaml
 8. setenforce 0
 9. redeploy rke2-nginx-lb
 10. place tar of 'bootstrap' images in /var/lib/rancher/rke2/agent/images
