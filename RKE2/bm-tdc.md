@@ -35,29 +35,29 @@ EOF
 selinux: true
 write-kubeconfig-mode: "0640"
 tls-san:
-- bm1.tdc4
-- bm2.tdc4
-- bm3.tdc4
-- vip.tdc4
-server: https://vip.tdc4:9345
+- bm1
+- bm2
+- bm3
+- vip.tdc4.corp
+server: https://vip.tdc4.corp:9345
 token: 
 EOF
 11.  cat > /etc/rancher/rke2/registries.yaml <<EOF
-> mirrors:
->   "bm1.tdc4:30500"
->     endpoint:
->     - "https://bm1.tdc4:30500"
->   docker.io
->     endpoint:
->     - "https://bm1.tdc4:30500"
-> configs:
->   "bm1.tdc:30500"
->     tls:
->      cert_file: /var/lib/rancher/hostPaths/registry/certs/server.crt
->       key_file: /var/lib/rancher/hostPaths/registry/certs/server.key
->       ca_file: /var/lib/rancher/hostPaths/registry/certs/ca.pem
->       insecure_skip_verify: true
-> EOF
+mirrors:
+  "bm1.tdc4:30500":
+    endpoint:
+    - "https://bm1.tdc4:30500"
+  docker.io:
+    endpoint:
+    - "https://bm1.tdc4:30500"
+configs:
+  "bm1.tdc:30500"
+    tls:
+     cert_file: /var/lib/rancher/hostPaths/registry/certs/server.crt
+     key_file: /var/lib/rancher/hostPaths/registry/certs/server.key
+     ca_file: /var/lib/rancher/hostPaths/registry/certs/ca.pem
+     insecure_skip_verify: true
+EOF
 12. Curl rke2-offline depnd tar 
 curl -LO https://rfed-public.s3-us-gov-east-1.amazonaws.com/rke-government-deps-offline-bundle-el8.tar.gz
 tar xzvf rke-government-deps-*.tar.gz
@@ -65,5 +65,8 @@ tar xzvf rke-government-deps-*.tar.gz
 14. Execute install-server.sh
 15. Set kubectl env vars
 16. SCP rke2 config.yaml to additional RKE2 nodes
+add node token. modify rke2-agent config
+17. Deploy CoreDNS static pod
+18. Deploy KubeVIP DS
 ## Now add additional RKE2 nodes to clusters
 
