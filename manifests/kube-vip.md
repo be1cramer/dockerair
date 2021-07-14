@@ -5,7 +5,7 @@ curl -s https://kube-vip.io/manifests/rbac.yaml > /var/lib/rancher/rke2/server/m
 
 ctr -a /run/k3s/containerd/containerd.sock image pull docker.io/plndr/kube-vip:v0.3.5
 
-export VIP=192.168.133.33
+export VIP=10.10.4.5
 export INTERFACE=lo
 
 alias kube-vip="ctr -a /run/k3s/containerd/containerd.sock run --rm --net-host docker.io/plndr/kube-vip:v0.3.5 vip /kube-vip"
@@ -18,7 +18,12 @@ kube-vip manifest daemonset \
     --inCluster \
     --taint \
     --bgp \
-    --bgppeers 192.168.133.34:65000::false,192.168.133.35:65000::false,192.168.133.36:6500::false | tee /var/lib/rancher/rke2/server/manifests/kube-vip.yaml
+    --bgppeers 10.10.4.1:65000::false,10.10.4.2:65000::false,10.10.4.3:65000::false | tee /var/lib/rancher/rke2/server/manifests/kube-vip.yaml
+
+kubectl edit daemonset kube-vip-ds -n kube-system
+## Append this key value pair to the spec.spec.containers-args.env:
+ - name: bgp_routerinterface
+   value: "eno3"
 
 
 ## Deploy the Kube-VIP Cloud Provider Load Balancer
