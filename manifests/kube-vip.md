@@ -31,3 +31,5 @@ kubectl edit daemonset kube-vip-ds -n kube-system
 kubectl apply -f https://raw.githubusercontent.com/kube-vip/kube-vip-cloud-provider/main/manifest/kube-vip-cloud-controller.yaml
 
 kubectl create configmap --namespace kube-system kubevip --from-literal range-global=10.10.4.20-10.10.4.50
+
+kubectl expose 

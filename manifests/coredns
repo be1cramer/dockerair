@@ -2,32 +2,42 @@ mkdir -p /var/lib/rancher/rke2/coredns
 
 
 cat > /var/lib/rancher/rke2/coredns/asteroids.db <<EOF
-tdc4.corp.        IN  SOA bm1.tdc4.corp. 1sgjwashburn.tdc4.corp. 2020111820 7200 3600 1209600 3600
-bm1.tdc4.corp.  IN  A   10.10.4.1
-bm2.tdc4.corp.  IN  A   10.10.4.2
-bm3.tdc4.corp.  IN  A   10.10.4.3
-bm4.tdc4.corp.  IN  A   10.10.4.4
-vip.tdc4.corp.  IN  A   10.10.4.5
-*.tdc4.corp.  IN  A   10.10.4.5
+$TTL  30M
+@   IN  SOA  bm1.tdc4.corp.  tdc4.corp.  (
+                2019041900  ; Serial
+                4H          ; Refresh
+                1H          ; Retry
+                7D          ; Expire
+                4H )        ; Negative Cache TTL
+    IN  NS  bm1
+
+bm1     IN  A   10.10.4.1
+bm2     IN  A   10.10.4.2
+bm3     IN  A   10.10.4.3
+bm4     IN  A   10.10.4.4
+vip.tdc4.corp.     IN  A   10.10.4.5
+rancher-lb.tdc4.corp.     IN  A   10.10.4.21
+
+*.vip.tdc4.corp.     IN  CNAME   vip
+rancher.tdc4.corp.     IN  CNAME   rancher-lb
 EOF
 
 cat > /var/lib/rancher/rke2/coredns/Corefile <<EOF
 .:53 {
     forward . 172.30.224.201:53 9.9.9.9:53
+    auto
     log
     errors
 }
-
 tdc4.corp:53 {
     file /etc/coredns/asteroids.db
     log
     errors
 }
-
 tdc4.:53 {
-    file /etc/coredns/asteroids.db 
+    file /etc/coredns/asteroids.db
     log
-    errors 
+    errors
 }
 EOF
 
@@ -60,4 +70,113 @@ spec:
       path: /var/lib/rancher/rke2/coredns/asteroids.db
     name: db
 status: {}
+EOF
+
+
+cat > /var/lib/rancher/rke2/agent/pod-manifests/coredns.yaml <<EOF
+apiVersion: v1
+kind: Pod
+metadata:
+  name: coredns-box
+  namespace: kube-system
+spec:
+  containers:
+  - image: coredns/coredns
+    args: [ "-conf", "/etc/coredns/Corefile" ]
+    name: coredns-box
+    resources: {}
+    volumeMounts:
+    - mountPath: /etc/coredns
+      name: config-volume
+  hostNetwork: true
+  volumes:
+    - name: config-volume
+      configmap:
+        name: coredns
+        items:
+        - key: Corefile
+          path: Corefile
+        - key: asteroids.db
+          path: asteroids.db
+status: {}
+EOF
+---
+cat > /var/lib/rancher/rke2/coredns/configmap.yaml <<EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns
+  namespace: kube-system
+data:
+  Corefile: |
+    .:53 {
+      forward . 172.30.224.201:53 9.9.9.9:53
+      auto
+      log
+      errors
+    }
+    tdc4.corp:53 {
+      file /etc/coredns/asteroids.db
+      log
+      errors
+    }
+    tdc4.:53 {
+      file /etc/coredns/asteroids.db
+      log
+      errors
+    }
+  asteroids.db: |
+    ;$TTL  30M
+    @   IN  SOA  bm1.tdc4.corp.  tdc4.corp.  (
+                    2019041900  ; Serial
+                    4H          ; Refresh
+                    1H          ; Retry
+                    7D          ; Expire
+                    4H )        ; Negative Cache TTL
+        IN  NS  bm1
+
+    bm1     IN  A   10.10.4.1
+    bm2     IN  A   10.10.4.2
+    bm3     IN  A   10.10.4.3
+    bm4     IN  A   10.10.4.4
+    vip.tdc4.corp.     IN  A   10.10.4.5
+    rancher-lb.tdc4.corp.     IN  A   10.10.4.21
+
+    *.vip.tdc4.corp.     IN  CNAME   vip
+    rancher.tdc4.corp.     IN  CNAME   rancher-lb
+EOF
+
+cat > /var/lib/rancher/rke2/server/manifests/rke2-coredns-config.yaml <<EOF
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: rke2-coredns
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    controller: 
+      volumes:
+        items:
+          - key: asteroids.db
+            path: asteroids.db
+      config: 
+        asteroids.db: |
+    ;$TTL  30M
+    @   IN  SOA  bm1.tdc4.corp.  tdc4.corp.  (
+                    2019041900  ; Serial
+                    4H          ; Refresh
+                    1H          ; Retry
+                    7D          ; Expire
+                    4H )        ; Negative Cache TTL
+        IN  NS  bm1
+
+    bm1     IN  A   10.10.4.1
+    bm2     IN  A   10.10.4.2
+    bm3     IN  A   10.10.4.3
+    bm4     IN  A   10.10.4.4
+    vip.tdc4.corp.     IN  A   10.10.4.5
+    rancher-lb.tdc4.corp.     IN  A   10.10.4.21
+
+    *.vip.tdc4.corp.     IN  CNAME   vip
+    rancher.tdc4.corp.     IN  CNAME   rancher-lb
 EOF
