@@ -1,0 +1,381 @@
+Lab 1, Exercise 1
+Step 2
+ssh student<#>@<host name>
+
+Lab 1, Exercise 2
+Step 1
+cd /etc/nginx/conf.d
+    
+Step 2
+sudo mv default.conf default.conf.bak
+
+Step 3
+sudo vim main.conf
+a
+
+Step 4 **REPLACE <back end #> with your Tomcat server names
+upstream myServers {
+    server ec2-13-57-217-231.us-west-1.compute.amazonaws.com:8080;
+    server ec2-54-219-116-88.us-west-1.compute.amazonaws.com:8080;        
+    server ec2-13-56-194-185.us-west-1.compute.amazonaws.com:8080;
+}
+
+Step 5  
+server { 
+    listen 80;
+    root /usr/share/nginx/html;
+} 
+
+Step 6  
+    location / {
+        proxy_pass http://myServers;
+    }
+
+Step 7
+    error_log /var/log/nginx/myServers.error.log info;
+    access_log /var/log/nginx/myServers.access.log combined;
+
+Step 8  
+    zone http_backend 64k;
+
+Step 9  
+sudo nginx -t
+sudo nginx -s reload
+
+Step 10  
+htpp://<FQDN>
+curl http://localhost/
+
+Lab 1, Exercise 3
+
+Step 1
+sudo vim /etc/nginx/conf.d/main.conf
+
+Step 2  
+    location /api {
+        api write=on;
+    }
+
+Step 3
+    location /dashboard {
+        try_files $uri $uri.html /dashboard.html;
+    }
+
+Step 4
+sudo nginx -s reload
+http://<FQDN>/dashboard.html
+
+Lab 1, Exercise 4
+Step 1
+sudo vim /etc/nginx/conf.d/main.conf
+
+Step 2
+backup
+
+Step 3
+match health_primary {
+    body !~ "BACKEND-1";
+}
+
+Step 4  
+        health_check match=health_primary fails=2;
+
+Step 5
+sudo nginx -s reload
+
+Step 6
+sudo vim /etc/nginx/conf.d/main.conf
+down
+
+Step 7
+sudo nginx -s reload
+
+Step 8
+http://<FQDN>
+or
+curl http://localhost
+
+Step 9
+sudo vim /etc/nginx/conf.d/main.conf
+
+Step 11
+sudo nginx -s reload
+
+
+Lab 2, Exercise 1
+
+Step 1
+sudo vim /etc/nginx/conf.d/main.conf
+    sticky cookie my_cookie expires=1h;
+
+Step 2
+sudo nginx -s reload
+
+Step 3
+http://<FQDN>
+
+Step 6
+sudo vim /etc/nginx/conf.d/main.conf
+
+Step 7
+sudo nginx -s reload
+
+Lab 2, Exercise 2
+
+Step 1
+sudo vim /etc/nginx/conf.d/main.conf
+  
+
+Step 2
+log_format sticky "\nRequest: $request \nStatus: $status \nClient: $remote_addr \nUpstream IP: $upstream_addr \nURI: $route_uri \nCookie: $route_cookie";
+
+Step 3
+sticky
+
+lab 2, Exercise 3
+Step 1
+sudo vim /etc/nginx/conf.d/main.conf
+route=backend1
+route=backend2
+route=backend3
+    sticky route $route_cookie $route_uri;
+
+Step 2
+map $cookie_jsessionid $route_cookie {  
+  ~.+\.(?P<route>\w+)$ $route; 
+}
+
+map $request_uri $route_uri {   
+  ~jsessionid=.+\.(?P<route>\w+)$ $route; 
+}
+
+Step 3
+        access_log off;
+
+Step 4
+sudo nginx -s reload
+
+Lab 2, Exercise 4
+
+Step 1
+sudo tail -F /var/log/nginx/myServers.access.log
+
+Step 2
+http://<FQDN>/dashboard
+
+Step 3
+http://<FQDN>
+http://<FQDN>
+http://<FQDN>
+
+Step 4
+http://<FQDN>/examples/servlets/servlet/SessionExample
+
+
+Lab 3, Exercise 1
+
+Step 1
+sudo vim /etc/nginx/nginx.conf
+
+Step 2 
+stream {
+    include /etc/nginx/tcp/*.conf;
+}
+
+Step 4
+sudo nginx -t
+
+Step 5
+sudo mkdir -p /etc/nginx/tcp
+sudo vim /etc/nginx/tcp/tcp_lb.conf
+
+Step 6
+upstream tcp_backend {
+    zone tcp_upstream 64k;
+    server <FQDN-tomcat1>:8080;
+    server <FQDN-tomcat2>:8080;
+    server <FQDN-tomcat3>:8080;
+}
+
+Step 7
+server {
+    listen 8080;
+    proxy_pass tcp_backend;
+}
+
+Step 8
+sudo nginx -s reload
+
+Step 9
+http://<FQDN>/dashboard.html
+
+Step 10
+telnet localhost 8080
+
+Lab 3, Exercise 2
+
+Step 1
+sudo vim /etc/nginx/tcp/tcp_lb.conf
+
+match tcp {
+    send "GET / HTTP/1.0\r\n Host: localhost:8080\r\n\r\n";
+    expect ~* "300 OK";
+}
+
+Step 2
+    health_check interval=10 passes=3 fails=1 match=tcp;
+
+Step 3
+sudo nginx -s reload
+
+Step 5
+sudo vim /etc/nginx/tcp/tcp_lb.conf
+
+200
+
+Step 6
+sudo nginx -s reload
+
+
+Lab 4, Exercise 1
+
+Step 1
+cd /etc/nginx/conf.d 
+sudo mv default.conf default.conf.bak
+sudo vim main.conf
+
+upstream myServers {
+    zone http_backend 64k;
+    server <tomcat1>:8080;
+    server <tomcat2>:8080;
+    server <tomcat3>:8080;
+}
+server {
+    listen 80;
+    root /usr/share/nginx/html;
+
+    error_log /var/log/nginx/myServers.error.log info;
+    access_log /var/log/nginx/myServers.access.log combined;
+
+    location / {
+        proxy_pass http://myServers;
+    }
+}
+
+
+Lab 4, Exercise 2
+Step 1
+sudo apt-get install nginx-ha-keepalived
+
+Step 2
+cd /usr/bin
+sudo ./nginx-ha-setup
+
+Step 3
+Host1: cat /etc/keepalived/keepalived.conf
+
+Step 4
+cat /var/run/nginx-ha-keepalived.state
+
+Step 5
+Host1:  sudo service keepalived stop
+Host2:  cat /var/run/nginx-ha-keepalived.state
+
+Step 6
+Host2:  curl http://localhost/
+
+Step 7
+Host1:  sudo service keepalived start
+
+Step 8
+cat /var/run/nginx-ha-keepalived.state
+
+Lab 4, Exercise 3
+
+Step 1
+Host1:  sudo ssh-keygen -t rsa -b 4096
+
+Step 2
+Host1:  sudo cat /root/.ssh/id_rsa.pub
+
+
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDGjmK8NKHlFLwO/a0gNYW+4LpqpoJpjoezGMbVKO76xrnPjRvsSikq1qvUBSEOgW9iII4noAYSsD40fngcq1u69xwtV2XEjgCKQUXS3G/KZsClFdClnlw5VG2byfdXrTtemZ8VROOgYympdFW7LkyUe2rQdcQwGHl/xH9Ey0DOfRmeE/0JcrS7Mip6SKspJ+7AflaEIvLSUsy4tzIVp6sF5cQqFK/JIUgxgcqE8tYZNQGwzZug+fRJgyqj/xHlVlXpJntW7isnBUy2zDikcT5nm56Fwmm+FvA7m3xcrvtvEqNTP0XqF5DBFs2eP9UP1/acFuGBArl4y5c8mFctPFvLNBpmUHDZntOaEQy9a9draYGdJr8VqbpxJyTb59JqqyL9hqxUvKGL2vvRaXYT/Rd+1YHl7i35wKLTgIy3x4dzVrLVTGO+mfwRkNI2OpHZzdlh+Lua4Ag29HegT2vvoMme4xhZ57YqsNE0u3jJLb9l8opg5w7w8U0jbySKFf219YDA/TcR8KWcEz8PcRP6Df4kxzOpg4Hj39aGv4P5TJ7eZrZZr8J2mebs0Q4FYf/JbLXYngAOuB/8txqEjQUvHoKL8teoHoFdDJkKHv7MgwJx/Qq5rDic6nryK0sTlSBXVEgfJuddUs7X8XY0RWvwn9t07QWV9KCBlWiERD5rUAZ6OQ== root@ubuntu_base
+
+Step 3
+ssh <user>@<FQDN_Host2>
+Host2:  sudo vim /root/.ssh/authorized_keys
+
+Step 7
+Host2:  sudo vim /etc/ssh/sshd_config
+PermitRootLogin without-password
+
+Step 9
+Host2:  sudo service ssh restart
+
+Step 10
+Host1:  sudo su
+Host1:  ssh -i /root/ssh/id_rsa root@<host2-privateIP>
+Host1:  ifconfig 
+
+Step 11
+Host2:  exit
+
+Lab 4, Exercise 4
+
+Step 1
+Host1:  sudo apt-get install nginx-sync
+
+Step 2
+Host1:  sudo vim /etc/nginx-sync.conf
+
+Step 3 on Host1
+NODES="<Host2-FQDN>"
+CONFPATHS="/etc/nginx/nginx.conf /etc/nginx/conf.d"
+EXCLUDE="web-server.conf.bak"
+
+Step 5
+Host1:  sudo /usr/bin/nginx-sync.sh
+
+Step 6
+Host1:  nginx-sync.sh -h
+Host1:  nginx-sync.sh -c <ec-2_host2>
+
+Step 7
+Host2:  sudo cat /etc/nginx/conf.d/main.conf
+
+Step 8
+Host2:  curl http://localhost/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+     

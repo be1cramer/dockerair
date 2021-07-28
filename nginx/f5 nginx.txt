@@ -1,0 +1,6 @@
+nginx ingress controller w/ waf, oidc, and sso capable tied to keycloak pki authentication for all applications in cluster tied to nginx service mesh. nginx service mesh provides l7 traffic mgmt and security through tls authentication  (provided cert-manager deployed and managing certificates w/ each app)
+
+nginx service mesh providing k8s app vip/clusterip/nodeport dynamically and assigning cluster dns A record to that vip/nodeport. 
+
+pathfinder can do automated vip and dns deployment
+

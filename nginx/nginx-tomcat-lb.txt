@@ -1,0 +1,31 @@
+upstream myServers {
+    zone http_backend 64k;
+    server ec2-184-169-191-248.us-west-1.compute.amazonaws.com:8080;
+    server ec2-18-144-35-162.us-west-1.compute.amazonaws.com:8080;
+    server ec2-3-101-62-126.us-west-1.compute.amazonaws.com:8080;
+}
+#match health_primary {
+#    body !~ "BACKEND-1";
+#}
+
+server {
+    listen 80;
+    root /usr/share/nginx/html;
+
+    error_log /var/log/nginx/myServers.error.log info;
+    access_log /var/log/nginx/myServers.access.log combined;
+
+    location /api {
+        api write=on;
+    }
+
+    location /dashboard {
+        try_files $uri $uri.html /dashboard.html;
+    }
+
+
+    location / {
+        proxy_pass http://myServers;
+        #health_check match=health_primary fails=2;
+    }
+}
