@@ -1,0 +1,54 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: rke2-coredns
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    servers:
+    - zones:
+      - zone: .
+      port: 53
+      plugins:
+      - name: errors
+      - name: health
+        configBlock: |-
+          lameduck 5s
+      - name: ready
+      - name: kubernetes
+        parameters: cluster.local in-addr.arpa ip6.arpa
+        configBlock: |-
+          pods insecure
+          fallthrough in-addr.arpa ip6.arpa
+          ttl 30
+      - name: prometheus
+        parameters: 0.0.0.0:9153
+      - name: forward
+        parameters: . /etc/resolv.conf
+      - name: cache
+        parameters: 30
+      - name: loop
+      - name: reload
+      - name: loadbalance
+    - zones:
+      - zone: tdc4.corp
+      port: 53
+      plugins:
+      - name: file
+        parameters: /etc/coredns/tdc4.db
+      - name: errors
+      - name: log
+    zoneFiles:
+      - filename: tdc4.db
+        domain: tdc4.corp
+        contents: |
+          tdc4.corp.   IN SOA ns1.tdc4.corp. bm1.tdc4.corp. 2015082541 7200 3600 1209600 3600
+          bm1   IN A   10.10.4.1
+          bm2   IN A   10.10.4.2
+          bm3   IN A   10.10.4.3
+          bm4   IN A   10.10.4.4
+          vip.tdc4.corp.   IN A   10.10.4.5
+          rancher-lb.tdc4.corp.   IN A   10.10.4.21
+          
+          *.vip.tdc4.corp.   IN CNAME   vip
+          rancher.tdc4.corp.   IN CNAME   rancher-lb

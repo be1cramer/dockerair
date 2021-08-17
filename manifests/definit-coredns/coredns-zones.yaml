@@ -1,0 +1,25 @@
+apiVersion: v1
+data:
+  db.definit.local: |
+    $TTL  30M
+    @   IN  SOA  ns1.definit.local.  definit.local.  (
+                    2019041900  ; Serial
+                    4H          ; Refresh
+                    1H          ; Retry
+                    7D          ; Expire
+                    4H )        ; Negative Cache TTL
+        IN  NS  ns1
+
+    ns1                       IN  A   192.168.21.4
+    pihole.definit.local.     IN  A   192.168.21.3
+    unifi.definit.local.      IN  A   192.168.21.10
+    vault.definit.local.      IN  A   192.168.21.11
+    syn-ds-01.definit.local.  IN  A   192.168.4.10
+    edgerouter                IN  A   192.168.1.1
+    sg300-10                  IN  A   192.168.9.2
+    sg300-20                  IN  A   192.168.100.3    
+
+kind: ConfigMap
+metadata:
+  name: coredns-zones
+  namespace: coredns

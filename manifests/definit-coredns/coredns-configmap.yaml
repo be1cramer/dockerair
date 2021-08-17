@@ -1,0 +1,23 @@
+apiVersion: v1
+data:
+  Corefile: |
+    .:53 {
+        forward . 192.168.133.10:53 9.9.9.9:53
+        auto
+        log
+        errors
+    }
+    asteroids2.corp:53 {
+        file /etc/coredns/asteroids2.db
+        log
+        errors
+    }
+    asteroids2.:53 {
+        file /etc/coredns/asteroids2.db
+        log
+        errors
+    }
+kind: ConfigMap
+metadata:
+  name: coredns-config
+  namespace: coredns

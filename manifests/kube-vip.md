@@ -30,6 +30,6 @@ kubectl edit daemonset kube-vip-ds -n kube-system
 
 kubectl apply -f https://raw.githubusercontent.com/kube-vip/kube-vip-cloud-provider/main/manifest/kube-vip-cloud-controller.yaml
 
-kubectl create configmap --namespace kube-system kubevip --from-literal range-global=10.10.4.20-10.10.4.50
+kubectl create configmap --namespace kube-system kubevip --from-literal range-global=192.168.133.43-192.168.133.80
 
-kubectl expose 
+kubectl expose service rook-ceph-mgr-dashboard --port=8443 --type=LoadBalancer --target-port=8443 -n rook-ceph

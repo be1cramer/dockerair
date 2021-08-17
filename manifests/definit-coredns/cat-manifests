@@ -1,0 +1,178 @@
+mkdir -p /var/lib/rancher/rke2/coredns 
+
+cat > /var/lib/rancher/rke2/coredns/namespace.yaml <<EOF
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: coredns
+EOF
+
+cat > /var/lib/rancher/rke2/coredns/coredns-config.yaml <<EOF
+apiVersion: v1
+data:
+  Corefile: |
+    .:53 {
+        forward . 192.168.133.10:53 9.9.9.9:53
+        auto
+        log
+        errors
+    }
+    asteroids2.corp:53 {
+        file /etc/coredns/asteroids2.db
+        log
+        errors
+    }
+    asteroids2.:53 {
+        file /etc/coredns/asteroids2.db
+        log
+        errors
+    }
+kind: ConfigMap
+metadata:
+  name: coredns-config
+  namespace: coredns
+EOF
+
+cat > /var/lib/rancher/rke2/coredns/coredns-zones.yaml <<EOF
+apiVersion: v1
+data:
+  db.tdc4.corp: |
+    $TTL  30M
+    @   IN  SOA  ns1.tdc4.corp.  tdc4.corp.  (
+                    2019041900  ; Serial
+                    4H          ; Refresh
+                    1H          ; Retry
+                    7D          ; Expire
+                    4H )        ; Negative Cache TTL
+        IN  NS  ns1
+
+    ns1              IN  A   192.168.133.45
+    bcec-vip-ds1     IN  A   192.168.133.34
+    bcec-vip-ds2     IN  A   192.168.133.35
+    bcec-vip-ds3     IN  A   192.168.133.36
+    vip.jcudev.corp.  IN  A   192.168.133.33
+
+    *.vip.jcudev.corp IN  CNAME   vip    
+
+kind: ConfigMap
+metadata:
+  name: coredns-zones
+  namespace: coredns
+EOF
+
+cat > /var/lib/rancher/rke2/coredns/coredns-deployment.yaml <<EOF
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: definit-coredns
+  namespace: coredns
+  labels:
+    app.kubernetes.io/name: coredns
+    app.kubernetes.io/instance: definit-coredns
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: coredns
+      app.kubernetes.io/instance: definit-coredns
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: coredns
+        app.kubernetes.io/instance: definit-coredns
+    spec:
+      containers:
+      - name: coredns-lab
+        image: coredns/coredns:latest
+        imagePullPolicy: Always
+        args: [ "-conf", "/etc/coredns/Corefile" ]
+        ports:
+          - name: dns-tcp
+            containerPort: 53
+            protocol: TCP
+          - name: dns-udp
+            containerPort: 53
+            protocol: UDP
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 60
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 5
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8181
+            scheme: HTTP
+          initialDelaySeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 5
+        volumeMounts:
+        - mountPath: "/etc/coredns/Corefile"
+          subPath: "Corefile"
+          name: coredns-config-volume
+        - mountPath: "/etc/coredns/asteroids2.db"
+          name: coredns-zone-volume
+      restartPolicy: Always
+      volumes:
+        - name: coredns-config-volume
+          configMap:
+            name: coredns-config
+            items:
+              - key: Corefile
+                path: Corefile
+        - name: coredns-zone-volume
+          configMap:
+            name: coredns-zones
+EOF
+
+cat > /var/lib/rancher/rke2/coredns/coredns-service.yaml <<EOF
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: coredns
+    app.kubernetes.io/instance: definit-coredns
+  name: coredns-tcp-service
+  namespace: coredns
+spec:
+  ports:
+  - port: 53
+    targetPort: 53
+    protocol: TCP
+    name: dns-tcp
+  selector:
+    app.kubernetes.io/name: coredns
+    app.kubernetes.io/instance: definit-coredns
+  loadBalancerIP: "192.168.133.71"
+  type: LoadBalancer
+  sessionAffinity: None
+  externalTrafficPolicy: Local
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: coredns
+    app.kubernetes.io/instance: definit-coredns
+  name: coredns-udp-service
+  namespace: coredns
+spec:
+  ports:
+  - port: 53
+    targetPort: 53
+    protocol: UDP
+    name: dns-udp
+  selector:
+    app.kubernetes.io/name: coredns
+    app.kubernetes.io/instance: definit-coredns
+  loadBalancerIP: "192.168.133.71"
+  type: LoadBalancer
+  sessionAffinity: None
+  externalTrafficPolicy: Local
+EOF

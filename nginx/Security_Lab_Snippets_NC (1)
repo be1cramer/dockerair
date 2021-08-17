@@ -1,0 +1,822 @@
+Security Lab Snippets
+
+Lab 1 Exercise 1 Login to Training Lab System
+	Step 2
+	ssh student<#>@<FQDN>
+
+	Step 3
+	nginx -v
+
+	Step 4
+	sudo nginx -t
+
+	Step 5
+	sudo nginx -s stop
+	sudo nginx
+	ps aux | grep nginx
+
+
+Lab 1 Exercise 2 Deploy a Web Application
+	Step 1
+	sudo service unit restart
+
+	Step 2sudo curl --unix-socket /var/run/control.unit.sock http://localhost/config
+
+	
+	Step 3
+	ps ax | grep dvwa
+
+
+Lab 1 Exercise 3 Test Web Application
+	Step 1
+	http://<dns1-hostname>/setup.php
+
+
+Lab 1 Exercise 4 Set Web Application Security Settings
+	Step 2
+	echo export DNS1=<dns1-hostname> >> ~/.bashrc
+	source ~/.bashrc
+	echo $DNS1
+
+
+Lab 2.1 Exercise 1 Generate Certs & Keys for HTTPS
+	Step 1
+	sudo apt-get install certbot
+
+	Step 2
+	sudo certbot --nginx -d $DNS1 --register-unsafely-without-email
+	
+	Step 3
+	sudo ls -l /etc/letsencrypt/live/$DNS1
+	
+	Step 4
+	sudo ls -l /etc/letsencrypt/archive/$DNS1
+
+	Step 5
+	sudo ls -ld /etc/letsencrypt/{live,archive}
+	sudo chgrp nginx /etc/letsencrypt/{live,archive}
+	sudo chmod 750 /etc/letsencrypt/{live,archive}
+	sudo ls -ld /etc/letsencrypt/{live,archive}
+
+	
+	Step 6
+	cd /etc/nginx/ssl-configs
+	sudo cp ssl-params.conf ssl-params.conf.orig
+	
+	Step 7
+	sudo vim /etc/nginx/ssl-configs/ssl-params.conf
+
+
+
+
+Lab 2.1 Exercise 2 Configure HTTPS Server
+	 Step 1
+	 sudo nginx -V
+	 
+
+	 Step 2
+	 cd /etc/nginx/conf.d
+	 sudo cp dvwa.conf dvwa.conf.orig
+
+	 Step 3
+	 sudo vim /etc/nginx/conf.d/dvwa.conf
+
+	 Step 4
+	     server_name <dns1-hostname>;
+
+	 Step 5
+    return 301 https://$host$request_uri;
+}
+
+	 Step 6
+server {
+    listen 443 ssl default_server;
+
+	 Step 7
+    include /etc/nginx/ssl-configs/ssl-params.conf;
+
+	  Step 8
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Host $host;
+
+	 Step 10
+	 sudo nginx -t
+
+
+Lab 2.1 Exercise 3 Set the ssl_ciphers
+	Step 1
+	openssl ciphers -v 'AES256+EECDH:AES256+EDH:!aNULL'
+
+	Step 2
+	sudo vim /etc/nginx/ssl-configs/ssl-params.conf
+
+	ssl_ciphers AES256+EECDH:AES256+EDH:!aNULL;
+
+	Step 4
+	sudo nginx -t
+
+
+Lab 2.1 Exercise 4 Forward Secrecy
+	Step 1
+	sudo openssl dhparam -dsaparam -out /etc/nginx/dhparam.pem 4096
+
+	Step 2
+	sudo vim /etc/nginx/ssl-configs/ssl-params.conf
+
+ssl_dhparam /etc/nginx/dhparam.pem;
+
+	Step 4
+	sudo nginx -t && sudo nginx -s reload
+
+
+Lab 2.1 Exercise 5 Test on SSL Labs
+	Step 1
+	curl -I http://127.0.0.1
+
+	Step 2
+	curl -IkL http://127.0.0.1
+
+	Step 3
+	curl -Ik https://127.0.0.1
+
+	Step 5
+https://www.ssllabs.com/ssltest
+
+
+Lab 2.2 Exercise 1 Secure Upstream Traffic
+	Step 1
+	cd /etc/nginx/conf.d
+
+	sudo cp api_server.conf api_server.conf.orig
+
+	Step 2
+	sudo vim /etc/nginx/conf.d/api_server.conf
+
+	Step 3
+	    listen 8080 ssl;
+
+	Step 4
+    location / {
+        proxy_pass https://api_server;
+        proxy_ssl_trusted_certificate /etc/letsencrypt/live/<dns1-hostname>/fullchain.pem;
+        proxy_ssl_verify off;
+    }
+
+	Step 5
+	sudo nginx -t && sudo nginx -s reload
+
+	Step 6
+	curl -k https://localhost:8080/
+
+	Step 7
+	cat /etc/nginx/ssl-configs/proxy-ssl-params.conf
+
+	Step 8
+	sudo vim /etc/nginx/conf.d/api_server.conf
+
+	include /etc/nginx/ssl-configs/proxy-ssl-params.conf;
+
+	Step 9
+	listen 8081 ssl;
+    include /etc/nginx/ssl-configs/ssl-params.conf;
+	...
+	listen 8082 ssl;
+    include /etc/nginx/ssl-configs/ssl-params.conf;
+
+	Step 10
+	sudo nginx -t && sudo nginx -s reload
+
+	Step 11 
+	curl -k https://localhost:8080
+	curl -k https://localhost:8080
+	curl -k https://localhost:8080
+
+
+Lab 2.2 Exercise 2 Setup an api Dashboard
+
+	Step 1
+	sudo vim /etc/nginx/conf.d/api_server.conf
+    location /api {
+        api;
+        access_log off;
+    }
+
+    location /dashboard  {
+        root /usr/share/nginx/html;
+        try_files $uri $uri.html /dashboard.html;
+    }
+
+    Step 2
+    zone api_server_upstream 64k;
+        
+    Step 3
+    status_zone api_gateway;
+
+    Step 4
+    sudo vim /etc/nginx/conf.d/dvwa.conf
+
+    zone index_php_upstream 64k;
+
+    Step 5
+    status_zone proxy;
+
+    Step 6
+	sudo nginx -t && sudo nginx -s reload
+
+	Step 7 
+	curl -k https://localhost:8080
+	curl -k https://localhost:8080
+
+	Step 9
+	https://<dns1-hostname>:8080/dashboard
+
+
+Lab 2.2 Exercise 3 Setup Logging
+
+	Step 1
+	sudo vim /etc/nginx/conf.d/dvwa.conf
+
+	Step 2
+log_format proxy_log "
+  Request: $request
+    Status: $status
+    Client: $remote_addr
+    Upstream: $upstream_addr
+    Forwarded-For: $proxy_add_x_forwarded_for
+    ssl_server_name: $ssl_server_name
+";
+
+	Step 3
+    access_log /var/log/nginx/main.access.log proxy_log;
+    error_log /var/log/nginx/main.error.log info;
+
+	Step 4
+	sudo nginx -t && sudo nginx -s reload
+
+	Step 5
+	curl -k https://127.0.0.1
+	curl -k https://localhost
+	curl https://$DNS1
+
+	Step 6
+	sudo tail -30 /var/log/nginx/main.access.log
+
+
+
+Lab 3.1 Exercise 1 Set Geo Limits 
+
+	Step 1
+	sudo vim /etc/nginx/conf.d/dvwa.conf
+
+geo $limit {
+    default 1;
+    127.0.0.1 0;
+}
+map $limit $limit_key {
+    0 "";
+    1 $binary_remote_addr;
+}
+
+	Step 2
+limit_req_zone $limit_key zone=req_zone:10m rate=5r/s;
+limit_conn_zone $server_name zone=conn_zone:10m;
+
+	Step 3
+    limit_req zone=req_zone burst=15 nodelay;
+    limit_conn conn_zone 2;
+    
+	Step 4
+	sudo nginx -t && sudo nginx -s reload
+
+
+
+Lab 3.2 Exercise 1 Access Log
+	Step 1
+	sudo tail -f /var/log/nginx/main.access.log
+
+	Step 2
+	for i in {0..50}; do (curl -kIs https://<dns1-hostname> | head -n1 &) 2>/dev/null; done
+
+
+Lab 3.2 Exercise 2 Debug Log & Logging Limit Rates
+	Step 1
+	sudo vim /etc/nginx/conf.d/dvwa.conf
+
+	Step 2
+    limit_req_log_level warn;
+    limit_req_status 444;
+
+    Step 3
+    sudo nginx -t && sudo nginx -s reload
+
+	Step 4
+	sudo tail -f /var/log/nginx/main.access.log
+
+	Step 5
+		for i in {0..50}; do (curl -kIs https://<dns1-hostname> | head -n1 &) 2>/dev/null; done
+
+
+
+Lab 3.3 Exercise 1 Setup Dynamic IP Blacklisting
+	Step 1
+	sudo mkdir /tmp/nginx
+	sudo chown nginx:nginx /tmp/nginx
+
+	Step 2
+	sudo vim /etc/nginx/conf.d/dvwa.conf
+
+	Step 3
+keyval_zone zone=one:1m state=/tmp/nginx/one.keyval;
+keyval $remote_addr $target zone=one;
+
+	Step 4
+    location /api {
+        api write=on;
+        allow 127.0.0.1;
+        deny all;
+    }
+
+	Step 5
+    if ($target) {
+        return 403;
+    }
+
+    Step 6
+    sudo nginx -t && sudo nginx -s reload
+
+    Step 7
+    https://whatismyipaddress.com
+
+    Step 8
+    curl -k -v -H "Content-type: application/json" -d '{"#.#.#.#":"1"}' 'https://127.0.0.1/api/4/http/keyvals/one'
+
+    Step 9
+    curl -k https://127.0.0.1/api/4/http/keyvals/one
+
+    Step 10
+    https://<dns1-hostname>
+
+    Step 11
+    curl -k -i -X PATCH -d '{"#.#.#.#": "0"}' -s 'https://127.0.0.1/api/4/http/keyvals/one'
+
+    Step 12
+    curl -k https://127.0.0.1/api/4/http/keyvals/one
+
+   	Step 14
+   	curl -k -i -X DELETE -d '{"#.#.#.#": "0"}' -s 'https://127.0.0.1/api/4/http/keyvals/one'
+
+   	Step 15
+   	curl -k https://127.0.0.1/api/4/http/keyvals/one
+   	
+
+
+Lab 3.4 Exercise 1 Dynamic Lazy Certificates
+
+   	Step 1
+   	cd /etc/nginx/ssl-configs
+   	sudo cp ssl-params.conf ssl-params.conf.traditional
+   	cd /etc/nginx/conf.d
+   	sudo cp api_server.conf api_server.conf.traditional
+   	sudo cp dvwa.conf dvwa.conf.traditional
+
+	Step 2
+	echo export DNS2=<dns2-hostname> >> ~/.bashrc
+	source ~/.bashrc
+	echo $DNS2
+
+	Step 3
+sudo certbot --nginx -d "$DNS2" --register-unsafely-without-email --test-cert
+	
+	Step 4
+sudo ls -l /etc/letsencrypt/{archive,live}/$DNS2
+	
+	Step 5
+sudo mkdir /etc/nginx/ssl-configs/certs
+cd /etc/nginx/ssl-configs/certs
+   	
+    Step 6
+sudo cp /etc/letsencrypt/live/$DNS2/fullchain.pem $DNS2.crt
+sudo cp /etc/letsencrypt/live/$DNS2/privkey.pem $DNS2.key
+ls -l
+sudo chmod 640 *
+sudo chgrp nginx *
+ls -l
+
+    Step 7
+sudo vim /etc/nginx/ssl-configs/ssl-params.conf
+ssl_trusted_certificate /etc/letsencrypt/live/<dns2-hostname>/chain.pem
+
+    Step 8
+ssl_certificate /etc/nginx/ssl-configs/certs/$ssl_server_name.crt;
+ssl_certificate_key /etc/nginx/ssl-configs/certs/$ssl_server_name.key;
+
+    Step 9
+sudo vim /etc/nginx/conf.d/dvwa.conf
+    :set number
+    G
+    /443
+    n
+    k
+    dG
+    /443
+    n
+
+    Step 10
+    server_name <dns2-hostname>;
+
+    Step 11
+    sudo vim /etc/nginx/conf.d/api_server.conf
+    proxy_ssl_trusted_certificate /etc/letsencrypt/live/<dns2-hostname>/fullchain.pem;
+
+    Step 12
+    sudo nginx -t && sudo nginx -s reload
+
+    Step 13
+    curl -sLIvk https://$DNS2
+
+
+
+Lab 3.5 Exercise 1 Dynamic In-memory Certificates
+   	Step 1
+cd /etc/nginx/ssl-configs
+sudo cp ssl-params.conf ssl-params.conf.lazy
+cd /etc/nginx/conf.d
+sudo cp api_server.conf api_server.conf.lazy
+sudo cp dvwa.conf dvwa.conf.lazy
+
+	Step 2
+curl ifconfig.co
+
+	Step 3
+sudo vim /etc/nginx/conf.d/dvwa.conf
+
+	allow <lab_system_public_IP_address>;
+
+	Step 4
+keyval_zone zone=ssl_crt:1m;
+keyval_zone zone=ssl_key:1m;
+keyval $ssl_server_name $crt_pem zone=ssl_crt;
+keyval $ssl_server_name $key_pem zone=ssl_key;
+   	
+    Step 5
+sudo nginx -t && sudo nginx -s reload
+
+    Step 6
+	Step 6a
+cd /etc/nginx/ssl-configs/certs
+ls -l
+id
+
+	Step 6b
+sudo usermod -aG nginx student<#>
+grep nginx /etc/group
+id
+
+	Step 6c LOG OUT
+
+	Step 6d LOG IN 
+
+	Step 6e
+id
+
+	Step 6f
+cd /etc/nginx/ssl-configs/certs
+
+sudo vim UPLOAD
+
+#! /bin/bash
+
+HOST=$DNS2
+
+for EXT in key crt ; do
+    CERT=$(sed 's/$/\\n/' $HOST.$EXT | tr -d '\n')
+    URL=https://$HOST/api/4/http/keyvals/ssl_$EXT
+    echo {\"$HOST\":\""$CERT"\"} | curl -kvH "Content-Type: application/json" -d @- $URL
+done
+
+	Step 7
+bash UPLOAD
+
+TROUBLESHOOTING ONLY - SKIP OTHERWISE:
+curl -k -i -X DELETE https://$DNS2/api/4/http/keyvals/ssl_key
+curl -k -i -X DELETE https://$DNS2/api/4/http/keyvals/ssl_crt
+
+	Step 8
+curl -k https://$DNS2/api/4/http/keyvals | jq
+
+	Step 9
+sudo vim /etc/nginx/ssl-configs/ssl-params.conf
+ssl_certificate data:$crt_pem;
+ssl_certificate_key data:$key_pem;
+
+	Step 10
+sudo vim /etc/nginx/conf.d/api_server.conf
+        proxy_ssl_name <DNS2>;
+        proxy_ssl_server_name on;
+
+	Step 11
+sudo nginx -t && sudo nginx -s reload
+
+    Step 12
+curl -k https://$DNS2/api/4/http/keyvals | jq
+
+    Step 13
+curl -k https://$DNS2:8080
+curl -k https://$DNS2:8080
+curl -k https://$DNS2:8080
+
+	Step 14
+cd /etc/nginx/ssl-configs
+sudo cp ssl-params.conf.traditional ssl-params.conf
+
+    Step 15
+cd /etc/nginx/conf.d
+sudo cp dvwa.conf.traditional dvwa.conf
+
+    Step 16
+sudo nginx -s reload
+
+    Step 17
+curl -LIvk https://$DNS1
+
+	Step 18
+https://<DNS1>:8080
+
+
+
+Lab 5 Exercise 1 Configure HTTP/2
+   	Step 1
+sudo vim /etc/nginx/conf.d/api_server.conf
+
+   	Step 2
+http2
+
+   	Step 3
+sudo nginx -s reload
+
+   	Step 4
+https://<DNS1>:8080
+
+Lab 5 Exercise 2 Configure error pages to not display NGINX version
+   	Step 1
+https://<DNS1>:8080
+
+   	Step 2
+https://<DNS1>:8080/shop
+
+   	Step 3
+sudo vim /etc/nginx/nginx.conf
+
+   	Step 4
+server_tokens off;
+
+   	Step 5
+sudo nginx -s reload
+
+   	Step 6
+https://<DNS1>:8080/shop
+
+
+Lab 6 Exercise 1 Create auth_jwt Realm & encode secret
+   	Step 1
+   	sudo vim /etc/nginx/conf.d/api_server.conf
+
+   	Step 2
+    location /products {
+        auth_jwt "Products API" token=$arg_apijwt;
+        auth_jwt_key_file /etc/nginx/ssl-configs/api_secret.jwk;
+        try_files $uri $uri.html /products.html;
+    }
+
+    Step 3
+    echo -n fantasticjwt | base64 | tr '+/' '-_' | tr -d '='
+
+    Step 4
+    echo '{"keys":[{"k":"ZmFudGFzdGljand0","kty":"oct","kid":"0001"}]}' | sudo tee /etc/nginx/ssl-configs/api_secret.jwk
+
+    Step 5
+    cat /etc/nginx/ssl-configs/api_secret.jwk | jq
+
+	Step 6
+    sudo nginx -t
+
+
+Lab 6 Exercise 2 Issue, Sign and Test the JWT
+	Step 1 Use the JWT creation website
+	https://jwt.io/
+
+	Step 1a - Create JWT HEADER
+	{
+  		"alg": "HS256",
+  		"typ": "JWT",
+  		"kid": "0001"
+	}
+
+	Step 1b - Create the PAYLOAD
+	{
+  		"sub": "quotes",
+  		"name": "Quotation System",
+  		"iss": "My API Gateway"
+	}
+
+	Step 1c - VERIFY SIGNATURE
+	ZmFudGFzdGljand0
+
+	Step 2 Create file quotes.jwt
+	sudo vim /etc/nginx/ssl-configs/quotes.jwt
+
+	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjAwMDEifQ.eyJzdWIiOiJxdW90ZXMiLCJuYW1lIjoiUXVvdGF0aW9uIFN5c3RlbSIsImlzcyI6Ik15IEFQSSBHYXRld2F5In0.4n1-lL5jirZkqAtv9vPVH7WbhzaD_om-me8G-gbq8Xs
+
+	Step 3
+	sudo echo "<h1>JWT Token Works</h1><p>Your JWT Authentication is successful</p>" | sudo tee /usr/share/nginx/html/products.html
+
+	Step 4
+	sudo nginx -t && sudo nginx -s reload
+
+	Step 5
+	curl -k https://$DNS1:8080/products
+
+	Step 6
+	curl -k https://$DNS1:8080/products?apijwt=`cat /etc/nginx/ssl-configs/quotes.jwt`
+
+
+Lab 7 WAF - ModSecurity
+	Step 1
+	sudo vim /etc/nginx/nginx.conf
+
+	Step 2
+	
+	sudo vim /etc/nginx/modsec/modsecurity.conf
+	# SecRuleEngine DetectionOnly
+	SecRuleEngine On
+
+	Step 3
+	sudo vim /etc/nginx/modsec/main.conf
+	Include /etc/nginx/modsec/modsecurity.conf
+	SecRule ARGS:testparam "@contains test" "id:1234,deny,log,status:403"
+
+	Step 4
+	cd /etc/nginx/conf.d
+	sudo cp dvwa.conf dvwa.conf.preModSec
+
+	Step 5
+	sudo vim /etc/nginx/conf.d/dvwa.conf
+	server {
+        listen 8085;
+        server_name localhost;
+        modsecurity on;
+        modsecurity_rules_file /etc/nginx/modsec/main.conf;
+        location / {
+            proxy_pass http://localhost:8086;
+        }
+    }
+    
+    server {
+        listen localhost:8086;
+        location / {
+            default_type text/plain;
+            return 200 "Thank you for requesting ${request_uri}\n";
+        }
+    }
+
+    Step 6
+    sudo nginx -t && sudo nginx -s reload
+
+    Step 7
+    curl -k -D - http://127.0.0.1:8085/foo?testparam=modsectest
+
+    Step 8
+    curl -k -D - http://127.0.0.1:8085/foo?testparam=foo
+
+    Step 9
+	cd
+	sudo git clone https://github.com/sullo/nikto
+
+	Step 10
+	perl ~/nikto/program/nikto.pl -h localhost:8085
+
+	Step 11
+	sudo wget https://github.com/SpiderLabs/owasp-modsecurity-crs/archive/v3.0.0.tar.gz
+	sudo tar -xzvf v3.0.0.tar.gz
+	sudo mv owasp-modsecurity-crs-3.0.0 /usr/local
+
+	Step 12
+	cd /usr/local/owasp-modsecurity-crs-3.0.0
+	sudo cp crs-setup.conf.example crs-setup.conf
+
+	Step 13
+	sudo vim /etc/nginx/modsec/main.conf
+	Include /usr/local/owasp-modsecurity-crs-3.0.0/crs-setup.conf
+	Include /usr/local/owasp-modsecurity-crs-3.0.0/rules/*.conf
+
+	Step 14
+	sudo nginx -t && sudo nginx -s reload
+
+	Step 15
+	curl -k -I -H "User-Agent: Nikto" http://localhost:8085/mod-test
+
+	Step 16
+	cd ~/nikto/program
+	sudo mv nikto.conf.default nikto.conf
+	sudo vim nikto.conf
+	# USERAGENT=Mozilla/5.00 (Nikto/@VERSION) (Evasions:@EVASIONS) (Test:@TESTID)
+	USERAGENT=Mozilla/5.00
+
+	Step 17
+	perl ~/nikto/program/nikto.pl -h localhost:8085
+
+	Step 18
+	sudo vim ~/nikto/program/nikto.conf
+	@@DEFAULT=@@ALL;-@@EXTRAS;tests(report:500);-sitefiles
+
+	Step 19
+	perl ~/nikto/program/nikto.pl -h localhost:8085
+
+	
+ Lab 8 NGINX APP PROTECT
+ 	Step 1
+ssh student<#>@<FQDN_NAP_SYSTEM>
+
+Step 2
+apt list --installed | grep nginx
+
+Step 3
+ps aux | grep nginx
+
+Step 4a
+curl http://localhost
+
+Step 4b
+curl http://localhost?a=%3Cscript%3E
+
+Step 5
+sudo vim /etc/nginx/nginx.conf
+
+Step 5a
+a
+
+Step 5b
+load_module modules/ngx_http_app_protect_module.so;
+
+Step 5c
+    app_protect_enable on;
+
+Step 5d
+    app_protect_security_log_enable on;
+    app_protect_security_log "/etc/app_protect/conf/log_default.json" /var/log/app_protect/class_security.log;
+
+Step 6
+sudo nginx -s reload
+
+Step 7
+curl http://localhost
+
+Step 8
+ssh student<#>@<FQDN_APP_PROTECT>
+tail -f /var/log/app_protect/class_security.log
+
+Step 9
+curl http://localhost?a=%3Cscript%3E
+
+Step 10
+http://FQDN/<script>
+
+Step 12
+http://<FQDN>/index.html
+curl http://localhost
+
+Step 13
+control-c
+
+Step 14
+sudo vim /etc/nginx/nginx.conf
+    app_protect_policy_file "/etc/nginx/NginxStrictPolicy.json";
+
+Step 15
+sudo nginx -s reload
+
+Step 16a
+curl http://<FQDN_App_Protect>/%09
+
+Step 16b
+curl http://<FQDN_App_Protect>/index.bat
+
+Step 16c
+curl http://<FQDN_App_Protect>?a=%3Cscript%3E
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

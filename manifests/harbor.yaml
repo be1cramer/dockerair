@@ -12,7 +12,7 @@ spec:
   chart: harbor/harbor
   targetNamespace: harbor
   valuesContent: |-
-    externalURL: https://harbor.asteroids.corp
+    externalURL: https://harbor.asteroids2.corp
     harborAdminPassword: P@55w0rd!1
     expose:
       type: ingress
