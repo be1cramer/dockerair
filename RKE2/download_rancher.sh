@@ -30,5 +30,5 @@ helm fetch jetstack/cert-manager --version v1.0.4
 #helm fetch bootc/netbox --version=3.0.0
 #helm fetch bitnami/postgresql-ha --version 6.9.0
 #helm fetch bitnami/redis-cluster --version 5.0.0
-helm fetch harbor/harbor --version 1.7.1
+helm fetch harbor/harbor --version 1.7.0
 #helm fetch bitnami/harbor --version 9.8.3
