@@ -98,8 +98,8 @@ download_images_from_list additional-images.txt
 
 
 # Download Rancher images
-#curl -LO https://github.com/rancher/rancher/releases/download/$RANCHER_VERSION/rancher-images.txt
-#download_images_from_list rancher-images.txt
+curl -LO https://github.com/rancher/rancher/releases/download/$RANCHER_VERSION/rancher-images.txt
+download_images_from_list rancher-images.txt
 
 # Download RKE Images
 #curl -LO https://github.com/rancher/rke2/releases/download/$RKE2_VERSION/rke2-images.linux-amd64.txt
