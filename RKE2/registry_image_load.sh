@@ -50,8 +50,27 @@ done
 
 # Pull any extra images from this list
 cat > additional-images.txt <<EOF
-harbor.jcudev.corp/license-dashboard/api:0.0.7
-harbor.jcudev.corp/license-dashboard/dash:0.0.2
+ceph/ceph:v15.2.13
+rook/ceph:v1.6.7
+nginxdemos/hello
+monachus/rancher-demo
+zayashv/dbench
+busybox:1.32.1
+quay.io/jetstack/cert-manager-cainjector:$CERT_MANAGER_VERSION
+quay.io/jetstack/cert-manager-controller:$CERT_MANAGER_VERSION
+quay.io/jetstack/cert-manager-webhook:$CERT_MANAGER_VERSION
+coredns/coredns
+kubevip/kube-vip-cloud-provider:0.1
+plndr/kube-vip:v0.3.5
+postgres:12
+redis:6.2.1
+goharbor/harbor-core:v2.2.2
+goharbor/harbor-db:v2.2.2
+goharbor/harbor-jobservice:v2.2.2
+goharbor/harbor-portal:v2.2.2
+goharbor/redis-photon:v2.2.2
+goharbor/registry-photon:v2.2.2
+rancher/klipper-helm:v0.6.1-build20210616
 EOF
 download_images_from_list additional-images.txt
 
@@ -74,6 +93,8 @@ download_images_from_list additional-images.txt
 #harbor.jcudev.corp/license-dashboard/api:0.0.1
 #harbor.jcudev.corp/license-dashboard/dash:0.0.1
 #docker.elastic.co/elasticsearch/elasticsearch:7.8.1
+#harbor.jcudev.corp/license-dashboard/api:0.0.7
+#harbor.jcudev.corp/license-dashboard/dash:0.0.2
 
 
 # Download Rancher images
