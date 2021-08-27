@@ -53,7 +53,7 @@ cat > additional-images.txt <<EOF
 ceph/ceph:v15.2.13
 rook/ceph:v1.6.7
 k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.2.0
-quay.io/cephcsi/cephcsi:v3.3.2
+quay.io/cephcsi/cephcsi:v3.3.1
 k8s.gcr.io/sig-storage/csi-provisioner:v2.2.2
 k8s.gcr.io/sig-storage/csi-resizer:v1.2.0
 k8s.gcr.io/sig-storage/csi-attacher:v3.2.1
