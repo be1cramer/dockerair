@@ -15,11 +15,15 @@ spec:
     externalURL: https://harbor.asteroids2.corp
     harborAdminPassword: P@55w0rd!1
     expose:
-      type: ingress
-      ingress:
-        hosts:
-          core: core.harbor.asteroids.corp
-          notary: notary.harbor.asteroids.corp
+      #type: ingress
+      #ingress:
+        #hosts:
+        #  core: core.harbor.asteroids.corp
+        #  notary: notary.harbor.asteroids.corp
+      type: loadBalancer
+      loadBalancer:
+        name: harbor
+        IP: 10.10.4.33
     chartmuseum:
       enabled: false
     trivy:
