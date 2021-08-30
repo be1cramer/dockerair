@@ -50,7 +50,12 @@ done
 
 # Pull any extra images from this list
 cat > additional-images.txt <<EOF
-goharbor/harbor-registryctl:v2.2.2
+k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.2.0
+quay.io/cephcsi/cephcsi:v3.3.1
+k8s.gcr.io/sig-storage/csi-provisioner:v2.2.2
+k8s.gcr.io/sig-storage/csi-resizer:v1.2.0
+k8s.gcr.io/sig-storage/csi-attacher:v3.2.1
+k8s.gcr.io/sig-storage/csi-snapshotter:v4.1.1
 EOF
 download_images_from_list additional-images.txt
 
@@ -96,6 +101,7 @@ download_images_from_list additional-images.txt
 # rancher/klipper-helm:v0.6.1-build20210616
 # ceph/ceph:v15.2.13
 # rook/ceph:v1.6.7
+# goharbor/harbor-registryctl:v2.2.2
 # k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.2.0
 # quay.io/cephcsi/cephcsi:v3.3.1
 # k8s.gcr.io/sig-storage/csi-provisioner:v2.2.2
