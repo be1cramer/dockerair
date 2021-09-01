@@ -43,7 +43,7 @@ docker run -it --rm \
 -v $(pwd)/RKE_Dependencies:/mnt \
 -w /mnt centos:8 \
 /bin/bash -c \
-"yum install -y openssl && curl -sfL https://gist.githubusercontent.com/mddamato/fe8ca3337b8ceae93d8f6ca02d9c02b6/raw/registry_self_signed_certs.sh | bash -"
+"yum install -y openssl && curl -sfL https://raw.githubusercontent.com/be1cramer/dockerair/main/manifests/registry_self_signed_certs.sh | bash -"
 ```
 ### Download any other dependencies we might need
 
