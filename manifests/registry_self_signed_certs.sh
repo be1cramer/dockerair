@@ -6,8 +6,8 @@ BASE_DIRECTORY=${1:-"registry_data"}
 REGISTRY_IP=${2:-"127.0.0.1"}
 REGISTRY_HOST=${3:-"localhost"}
 
-CA_SUBJ_INPUT=${4:-"/C=US/ST=Virgina/L=Alexandria/O=MDD-RFed/OU=Engineering/CN=registry-ca"}
-REGISTRY_SUBJ_INPUT=${5:-"/C=US/ST=Virgina/L=Alexandria/O=MDD-RFed/OU=Engineering/CN=registry-ca"}
+CA_SUBJ_INPUT=${4:-"/C=US/ST=NC/L=FtBragg/O=JCU/OU=EC/CN=registry-ca"}
+REGISTRY_SUBJ_INPUT=${5:-"/C=US/ST=NC/L=FtBragg/O=JCU/OU=EC/CN=registry-ca"}
 
 mkdir -p $BASE_DIRECTORY/certs
 mkdir -p $BASE_DIRECTORY/db
