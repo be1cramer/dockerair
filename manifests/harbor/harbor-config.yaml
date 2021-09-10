@@ -25,3 +25,6 @@ spec:
       enabled: false
     persistence:
       enabled: true
+      persistentVolumeClaim:
+        registry:
+        size: 50Gi 

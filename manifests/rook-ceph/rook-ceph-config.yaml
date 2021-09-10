@@ -1,0 +1,8 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: rook-ceph
+  namespace: rook-ceph
+spec:
+  valuesContent: |-
+  
