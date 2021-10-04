@@ -1,0 +1,12 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: longhorn
+  namespace: longhorn-system
+spec:
+  valuesContent: |-
+    defaultSettings:
+      defaultReplicaCount: 2
+      replicaAutoBalance: best-effort
+      defaultDataLocality: best-effort
+      defaultDataPath: /opt/lib/longhorn
