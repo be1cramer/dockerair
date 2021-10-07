@@ -9,4 +9,4 @@ spec:
       defaultReplicaCount: 2
       replicaAutoBalance: best-effort
       defaultDataLocality: best-effort
-      defaultDataPath: /opt/lib/longhorn
+      defaultDataPath: "/opt/lib/longhorn"
