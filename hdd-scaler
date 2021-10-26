@@ -1,0 +1,61 @@
+#show the block devices
+lsblk -f
+
+#show the existing physical volumes 
+pvs
+
+#create a physical volume for new hdd 1
+pvcreate /dev/sde
+
+#create a physical volume for new hdd 2
+pvcreate /dev/sdf
+
+#show the existing volume groups
+vgs
+
+#create a new volume group, named longhorn-vg using the new hdd 1
+vgcreate longhorn-vg /dev/sde
+
+#extend the current vg: centos_bcec-rke2ac1-w001 using the new hdd 2
+vgextend centos_bcec-rke2ac1-w001 /dev/sdf
+
+#show the updated physical volumes
+pvs
+
+#show the updated volume groups
+vgs
+
+#show the current logical volumes
+lvs
+
+#create a new logical volume named: longhorn-lv using all of the disk space in the volume group: longhorn-vg
+lvcreate -n longhorn-lv -l 100%FREE longhorn-vg
+
+#extend the logical volume centos_bcec--rke2ac1--w001-root using 100% of the free disk space in the vg: centos_bcec-rke2ac1-w001
+lvextend -l +100%FREE /dev/mapper/centos_bcec--rke2ac1--w001-root
+
+#extend the resize2fs partition: centos_bcec--rke2ac1--w001-root to include the 100 GB hdd 1 that was added
+resize2fs /dev/mapper/centos_bcec--rke2ac1--w001-root 100G
+
+#create a new ext4 partition using the lognhorn logical volume created earlier
+mkfs.ext4 /dev/longhorn-vg/longhorn-lv
+
+#create the path to be mounted by the longhorn partition
+mkdir -p /opt/lib/longhorn
+
+#mount the longhorn logical volume to the longhorn partition root path
+mount /dev/longhorn-vg/longhorn-lv /opt/longhorn
+
+#appened a line in /etc/fstab that points to the mount point for the newly created longhorn volue
+cat >> /etc/fstab << EOF
+/dev/mapper/longhorn--vg-longhorn--lv /opt/lib/longhorn ext4     defaults 0 0 \
+EOF
+
+
+
+
+
+
+
+lvs
+lvcreate
