@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  annotations:
+    pv.kubernetes.io/bind-completed: "yes"
+    pv.kubernetes.io/bound-by-controller: "yes"
+    volume.beta.kubernetes.io/storage-provisioner: driver.longhorn.io
+  creationTimestamp: "2021-10-06T21:12:18Z"
+  finalizers:
+  - kubernetes.io/pvc-protection
+  labels:
+    app: postgresql
+    release: airflow-cluster
+    role: master
+  name: data-airflow-cluster-postgresql-0
+  namespace: airflow-cluster
+  resourceVersion: "47917323"
+  uid: cd43d791-ab44-4717-9a40-015d881d3b30
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 8Gi
+  storageClassName: longhorn
+  volumeMode: Filesystem
+  volumeName: pvc-cd43d791-ab44-4717-9a40-015d881d3b30
+status:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 8Gi
+  phase: Bound

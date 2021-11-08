@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: registry
+  labels:
+    app: registry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: registry
+  template:
+    metadata:
+      labels:
+        app: registry
+    spec:
+      volumes:
+        - name: registry-certificates
+          secret:
+            secretName: registry-certificates
+        - name: registry-data
+          persistentVolumeClaim:
+            claimName: registry-data-pvc
+      containers:
+      - name: registry
+        env:
+        - name: REGISTRY_HTTP_TLS_CERTIFICATE
+          value: "/certs/cert"
+        - name: REGISTRY_HTTP_TLS_KEY
+          value: "/certs/key"
+        - name: REGISTRY_HTTP_ADDR
+          value: "0.0.0.0:443"
+        image: docker.io/library/registry:2
+        ports:
+        - containerPort: 443
+        volumeMounts:
+        - name: registry-data
+          mountPath: /var/lib/registry
+        - mountPath: /certs
+          name: registry-certificates
+          readOnly: true
+      - name: registry-insecure
+        env:
+        - name: REGISTRY_HTTP_ADDR
+          value: "0.0.0.0:5000"
+        image: docker.io/library/registry:2
+        ports:
+        - containerPort: 5000
+        volumeMounts:
+        - name: registry-data
+          mountPath: /var/lib/registry
+          readOnly: true
+        - mountPath: /certs
+          name: registry-certificates
+          readOnly: true    
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: registry-data-pvc
+spec: 
+  accessModes: 
+    - ReadWriteOnce
+  volumeMode: Block
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1 
+kind: Service 
+metadata: 
+  labels: 
+    app: registry
+  name: registry-lb
+spec:
+  type: LoadBalancer
+  selector: 
+    app: registry
+  loadBalancerIP: 192.168.133.73
+  ports:
+    - port: 443
+      protocol: TCP
+      targetPort: 443
+
+
