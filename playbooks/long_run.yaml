@@ -1,0 +1,11 @@
+---
+
+- name: Run for a long time (> 4 hours)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Wait for 60 seconds
+      ansible.builtin.pause:
+        minutes: 1
+      with_sequence: start=1 end=480
